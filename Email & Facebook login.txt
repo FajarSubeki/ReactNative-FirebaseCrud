@@ -1,0 +1,127 @@
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import * as firebase from 'firebase'
+import { Facebook } from 'expo'
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQe89mkeIJMdYujAYQ5wtGX3wg8GifSGo",
+  authDomain: "react-firebase-da8d9.firebaseapp.com",
+  databaseURL: "https://react-firebase-da8d9.firebaseio.com",
+  projectId: "react-firebase-da8d9",
+}
+firebase.initializeApp(firebaseConfig);
+
+import { Container, Content, Header, Form, Input, Item, Button, Label } from 'native-base'
+
+export default class App extends React.Component {
+
+  constructor(props) {
+    super(props)
+
+    this.state = ({
+      email: '',
+      password: ''
+    })
+  }
+
+  componentDidMount(){
+    firebase.auth().onAuthStateChanged((user) => {
+      if(user != null){
+        console.log(user)
+      }
+    })
+  }
+
+  signUpUser = (email, password) => {
+    try {
+      if (this.state.password.length < 6) {
+        alert("Please enter atleast 6 characters")
+        return;
+      } else {
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+        alert("Success Save Your Account")
+      }
+    } catch (error) {
+      console.log(error.toString())
+    }
+  }
+
+  loginUser = (email, password) => {
+    try {
+      firebase.auth().signInWithEmailAndPassword(email, password).then(function (user) {
+
+      })
+    } catch (error) {
+      console.log(error.toString())
+    }
+  }
+
+  async loginWithFacebook(){
+    const {type, token} = await Facebook.logInWithReadPermissionsAsync
+    ('905453886331347', { permissions: ['public_profile']})
+    if(type == 'success'){
+      const credintial = firebase.auth.FacebookAuthProvider.credential(token)
+      firebase.auth().signInWithCredential(credintial).catch((error) => {
+          console.log(error)
+      })
+    }
+  }
+
+  render() {
+    return (
+      <Container style={styles.container}>
+        <Form>
+          <Item floatingLabel>
+            <Label>Email</Label>
+            <Input
+              autoCorrect={false}
+              autoCapitalize="none"
+              onChangeText={(email) => this.setState({ email })}
+            />
+          </Item>
+          <Item floatingLabel>
+            <Label>Password</Label>
+            <Input
+              secureTextEntry={true}
+              autoCorrect={false}
+              autoCapitalize="none"
+              onChangeText={(password) => this.setState({ password })}
+            />
+          </Item>
+          <Button style={{ marginTop: 15, marginLeft: 15, marginRight: 15 }}
+            full
+            rounded
+            success
+            onPress={() => this.loginUser(this.state.email, this.state.password)}
+          >
+            <Text style={{ color: 'white' }}>Login</Text>
+          </Button>
+          <Button style={{ margin: 15 }}
+            full
+            rounded
+            primary
+            onPress={() => this.signUpUser(this.state.email, this.state.password)}
+          >
+            <Text style={{ color: 'white' }}>Signup</Text>
+          </Button>
+          <Button style={{ margin: 15 }}
+            full
+            rounded
+            primary
+            onPress={() => this.loginWithFacebook()}
+          >
+            <Text style={{ color: 'white' }}>Login with facebook</Text>
+          </Button>
+        </Form>
+      </Container>
+    );
+  }
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+  },
+});
